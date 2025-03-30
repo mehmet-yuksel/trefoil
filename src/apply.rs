@@ -63,7 +63,7 @@ fn apply_update(ast: Ast, path: &[usize], new_value: String) -> Ast {
         // Handle root-level atom update
         match ast {
             Ast::Atom(_) => Ast::Atom(new_value),
-            _ => panic!("Expected atom when updating with empty path")
+            _ => panic!("Expected atom when updating with empty path"),
         }
     } else if path.len() == 1 {
         // Direct child of the root
