@@ -56,20 +56,32 @@ fn main() -> Result<(), Box<dyn Error>> {
             let code = std::fs::read_to_string("code.lisp")?;
             let tokens = tokenize(&code);
             let new_ast = parse(&tokens)?;
+
             let current_id = get_current_commit_id(vcdir)?;
             let current_ast = reconstruct_ast(current_id, &commits_dir)?;
+
             let mut path = vec![];
             let instructions = diff_ast(&current_ast, &new_ast, &mut path);
-            let new_id = current_id + 1;
-            let new_commit = Commit {
-                id: new_id,
-                parent_id: Some(current_id),
-                instructions,
-                timestamp: 0,
-            };
-            save_commit(&new_commit, &commits_dir)?;
-            set_current_commit_id(new_id, vcdir)?;
-            println!("Committed changes as commit {}", new_id);
+
+            if instructions.is_empty() {
+                println!("No changes detected in 'code.lisp'. Nothing to commit.");
+            } else {
+                let commit_files = std::fs::read_dir(&commits_dir)?
+                    .filter_map(|entry| entry.ok())
+                    .filter_map(|entry| entry.path().file_stem()?.to_str()?.parse::<u64>().ok())
+                    .collect::<Vec<u64>>();
+                let next_id = commit_files.iter().max().map_or(0, |max_id| max_id + 1);
+
+                let new_commit = Commit {
+                    id: next_id,
+                    parent_id: Some(current_id),
+                    instructions,
+                    timestamp: 0, // TODO: use real timestamp
+                };
+                save_commit(&new_commit, &commits_dir)?;
+                set_current_commit_id(next_id, vcdir)?;
+                println!("Committed changes as commit {}", next_id);
+            }
         }
         Commands::Log => {
             let current_id = get_current_commit_id(vcdir)?;
