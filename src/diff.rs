@@ -48,7 +48,8 @@ mod tests {
     use proptest::strategy::{BoxedStrategy, Strategy};
 
     fn atom_strategy() -> BoxedStrategy<Ast> {
-        prop::string::string_regex("[a-zA-Z0-9_]+").unwrap()
+        prop::string::string_regex("[a-zA-Z0-9_]+")
+            .unwrap()
             .prop_map(|s| Ast::Atom(s))
             .boxed()
     }
