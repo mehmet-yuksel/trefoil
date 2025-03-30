@@ -68,10 +68,7 @@ mod tests {
         if depth == 0 {
             atom_strategy()
         } else {
-            proptest::prop_oneof![
-                atom_strategy(),
-                list_strategy(depth - 1)
-            ].boxed()
+            proptest::prop_oneof![atom_strategy(), list_strategy(depth - 1)].boxed()
         }
     }
 
@@ -80,7 +77,7 @@ mod tests {
         fn diff_apply_roundtrip(old in ast_strategy(3), new in ast_strategy(3)) {
             let mut path = vec![];
             let instructions = diff_ast(&old, &new, &mut path);
-            
+
             // Apply all instructions to the old AST
             let mut result = old.clone();
             for instruction in instructions {
