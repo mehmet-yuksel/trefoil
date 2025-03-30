@@ -60,7 +60,11 @@ fn apply_delete(ast: Ast, path: &[usize], index: usize) -> Ast {
 
 fn apply_update(ast: Ast, path: &[usize], new_value: String) -> Ast {
     if path.is_empty() {
-        panic!("Path cannot be empty for update");
+        // Handle root-level atom update
+        match ast {
+            Ast::Atom(_) => Ast::Atom(new_value),
+            _ => panic!("Expected atom when updating with empty path")
+        }
     } else if path.len() == 1 {
         // Direct child of the root
         let index = path[0];

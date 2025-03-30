@@ -39,3 +39,66 @@ pub fn diff_ast(old: &Ast, new: &Ast, path: &mut Vec<usize>) -> Vec<Instruction>
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::apply::apply_instruction;
+    use proptest::prelude::*;
+    use proptest::strategy::{BoxedStrategy, Strategy};
+
+    fn atom_strategy() -> BoxedStrategy<Ast> {
+        prop::string::string_regex("[a-zA-Z0-9_]+").unwrap()
+            .prop_map(|s| Ast::Atom(s))
+            .boxed()
+    }
+
+    fn list_strategy(depth: u32) -> BoxedStrategy<Ast> {
+        if depth == 0 {
+            atom_strategy()
+        } else {
+            prop::collection::vec(ast_strategy(depth - 1), 0..5)
+                .prop_map(|v| Ast::List(v))
+                .boxed()
+        }
+    }
+
+    fn ast_strategy(depth: u32) -> BoxedStrategy<Ast> {
+        if depth == 0 {
+            atom_strategy()
+        } else {
+            proptest::prop_oneof![
+                atom_strategy(),
+                list_strategy(depth - 1)
+            ].boxed()
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn diff_apply_roundtrip(old in ast_strategy(3), new in ast_strategy(3)) {
+            let mut path = vec![];
+            let instructions = diff_ast(&old, &new, &mut path);
+            
+            // Apply all instructions to the old AST
+            let mut result = old.clone();
+            for instruction in instructions {
+                result = apply_instruction(result, instruction);
+            }
+
+            // The result should equal the new AST
+            assert_eq!(result, new);
+        }
+
+        #[test]
+        fn diff_minimal(old in ast_strategy(3), new in ast_strategy(3)) {
+            let mut path = vec![];
+            let instructions = diff_ast(&old, &new, &mut path);
+
+            // If old and new are equal, there should be no instructions
+            if old == new {
+                assert!(instructions.is_empty());
+            }
+        }
+    }
+}
