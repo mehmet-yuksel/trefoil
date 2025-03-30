@@ -1,6 +1,7 @@
 use clap::{Parser, Subcommand};
 use std::error::Error;
 use std::path::Path;
+use trefoil::ast::Ast;
 use trefoil::diff::diff_ast;
 use trefoil::parser::{parse, tokenize};
 use trefoil::vc::Commit;
@@ -107,11 +108,25 @@ fn main() -> Result<(), Box<dyn Error>> {
             }
         }
         Commands::Checkout { id } => {
+            let commit_path = commits_dir.join(format!("{}.json", id));
+            if !commit_path.exists() {
+                return Err(format!("Commit with id '{}' not found.", id).into());
+            }
+
             let ast = reconstruct_ast(id, &commits_dir)?;
-            let code = ast.to_string();
-            std::fs::write("code.lisp", code)?;
+
+            let code_to_write = match ast {
+                Ast::List(nodes) => nodes
+                    .iter()
+                    .map(|node| node.to_string())
+                    .collect::<Vec<String>>()
+                    .join("\n"),
+                _ => ast.to_string(),
+            };
+
+            std::fs::write("code.lisp", code_to_write)?;
             set_current_commit_id(id, vcdir)?;
-            println!("Checked out commit {}", id);
+            println!("Checked out commit {}. 'code.lisp' updated.", id);
         }
         Commands::Debug { id } => {
             let commits_dir = vcdir.join("commits");
