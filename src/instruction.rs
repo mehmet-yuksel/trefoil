@@ -1,7 +1,8 @@
 use crate::ast::Ast;
 use std::fmt::{Display, Formatter, Result};
+use serde::{Serialize, Deserialize};
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum Instruction {
     Insert {
         path: Vec<usize>,

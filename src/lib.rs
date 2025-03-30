@@ -3,3 +3,4 @@ pub mod ast;
 pub mod diff;
 pub mod instruction;
 pub mod parser;
+pub mod vc;

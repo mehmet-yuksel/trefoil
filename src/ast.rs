@@ -1,6 +1,7 @@
 use std::fmt::Display;
+use serde::{Serialize, Deserialize};
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub enum Ast {
     Atom(String),
     List(Vec<Ast>),
