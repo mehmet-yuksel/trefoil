@@ -1,10 +1,12 @@
 use clap::{Parser, Subcommand};
-use trefoil::vc::{get_current_commit_id, reconstruct_ast, save_commit, set_current_commit_id, get_commit_chain};
-use trefoil::parser::{parse, tokenize};
-use trefoil::diff::diff_ast;
-use trefoil::vc::Commit;
 use std::error::Error;
 use std::path::Path;
+use trefoil::diff::diff_ast;
+use trefoil::parser::{parse, tokenize};
+use trefoil::vc::Commit;
+use trefoil::vc::{
+    get_commit_chain, get_current_commit_id, reconstruct_ast, save_commit, set_current_commit_id,
+};
 
 #[derive(Parser)]
 #[command(name = "trefoil")]
@@ -75,11 +77,17 @@ fn main() -> Result<(), Box<dyn Error>> {
         Commands::Debug { id } => {
             let commits_dir = vcdir.join("commits");
             let chain = get_commit_chain(id, &commits_dir)?;
-            let commit = chain.iter().find(|c| c.id == id)
+            let commit = chain
+                .iter()
+                .find(|c| c.id == id)
                 .ok_or("Commit not found")?;
             println!("Instructions for commit {}:", id);
             for (i, instruction) in commit.instructions.iter().enumerate() {
-                println!("{}. {}", i + 1, instruction.to_string().replace("[", "(").replace("]", ")"));
+                println!(
+                    "{}. {}",
+                    i + 1,
+                    instruction.to_string().replace("[", "(").replace("]", ")")
+                );
             }
         }
     }

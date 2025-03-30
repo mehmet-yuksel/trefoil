@@ -1,7 +1,7 @@
-use crate::instruction::Instruction;
-use serde::{Serialize, Deserialize};
-use crate::ast::Ast;
 use crate::apply::apply_instruction;
+use crate::ast::Ast;
+use crate::instruction::Instruction;
+use serde::{Deserialize, Serialize};
 use std::error::Error;
 use std::path::Path;
 
@@ -54,7 +54,8 @@ pub fn get_commit_chain(current_id: u64, dir: &Path) -> Result<Vec<Commit>, Box<
 pub fn reconstruct_ast(up_to_id: u64, dir: &Path) -> Result<Ast, Box<dyn Error>> {
     let mut ast = Ast::List(vec![]); // Initial empty list
     let chain = get_commit_chain(up_to_id, dir)?;
-    for commit in chain.iter().rev() { // From root to up_to_id
+    for commit in chain.iter().rev() {
+        // From root to up_to_id
         for instruction in &commit.instructions {
             ast = apply_instruction(ast, instruction.clone());
         }

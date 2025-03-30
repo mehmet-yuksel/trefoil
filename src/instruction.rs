@@ -1,6 +1,6 @@
 use crate::ast::Ast;
+use serde::{Deserialize, Serialize};
 use std::fmt::{Display, Formatter, Result};
-use serde::{Serialize, Deserialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum Instruction {
@@ -26,13 +26,9 @@ pub enum Instruction {
 impl Display for Instruction {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result {
         match self {
-            Instruction::Insert { path, index, node } => write!(
-                f,
-                "Insert at path {:?} index {} node {}",
-                path,
-                index,
-                node
-            ),
+            Instruction::Insert { path, index, node } => {
+                write!(f, "Insert at path {:?} index {} node {}", path, index, node)
+            }
             Instruction::Delete { path, index } => {
                 write!(f, "Delete at path {:?} index {}", path, index)
             }
