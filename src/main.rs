@@ -86,8 +86,24 @@ fn main() -> Result<(), Box<dyn Error>> {
         Commands::Log => {
             let current_id = get_current_commit_id(vcdir)?;
             let chain = get_commit_chain(current_id, &commits_dir)?;
-            for commit in chain.iter().rev() {
-                println!("Commit {}", commit.id);
+            if chain.is_empty() {
+                println!("No commits found.");
+            } else {
+                println!("Commit History (newest first):");
+                for commit in &chain {
+                    print!(
+                        "* commit {} (parent: {:?})",
+                        commit.id,
+                        commit
+                            .parent_id
+                            .map(|id| id.to_string())
+                            .unwrap_or_else(|| "None".to_string())
+                    );
+                    if commit.id == current_id {
+                        print!(" (HEAD)");
+                    }
+                    println!();
+                }
             }
         }
         Commands::Checkout { id } => {
