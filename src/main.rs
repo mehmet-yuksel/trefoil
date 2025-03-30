@@ -129,21 +129,35 @@ fn main() -> Result<(), Box<dyn Error>> {
             println!("Checked out commit {}. 'code.lisp' updated.", id);
         }
         Commands::Debug { id } => {
-            let commits_dir = vcdir.join("commits");
-            let chain = get_commit_chain(id, &commits_dir)?;
-            let commit = chain
-                .iter()
-                .find(|c| c.id == id)
-                .ok_or("Commit not found")?;
-            println!("Instructions for commit {}:", id);
-            for (i, instruction) in commit.instructions.iter().enumerate() {
-                println!(
-                    "{}. {}",
-                    i + 1,
-                    instruction.to_string().replace("[", "(").replace("]", ")")
-                );
+            let commit_path = commits_dir.join(format!("{}.json", id));
+            if !commit_path.exists() {
+                return Err(format!("Commit with id '{}' not found.", id).into());
+            }
+
+            let commit = load_commit(id, &commits_dir)?;
+
+            println!(
+                "Instructions stored IN commit {}: (Transforming from parent {:?} to {})",
+                id, commit.parent_id, id
+            );
+            if commit.instructions.is_empty() {
+                println!("  (No instructions - likely initial commit or no changes)");
+            } else {
+                for (i, instruction) in commit.instructions.iter().enumerate() {
+                    // Improve display slightly: use () for paths instead of []
+                    let formatted_instruction =
+                        instruction.to_string().replace("[", "(").replace("]", ")");
+                    println!("{}. {}", i + 1, formatted_instruction);
+                }
             }
         }
     }
     Ok(())
+}
+
+fn load_commit(id: u64, dir: &Path) -> Result<Commit, Box<dyn Error>> {
+    let path = dir.join(format!("{}.json", id));
+    let data = std::fs::read_to_string(path)?;
+    let commit: Commit = serde_json::from_str(&data)?;
+    Ok(commit)
 }
