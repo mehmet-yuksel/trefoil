@@ -30,16 +30,27 @@ fn main() -> Result<(), Box<dyn Error>> {
     let commits_dir = vcdir.join("commits");
     match cli.command {
         Commands::Init => {
-            std::fs::create_dir_all(&commits_dir)?;
-            let root_commit = Commit {
-                id: 0,
-                parent_id: None,
-                instructions: vec![],
-                timestamp: 0,
-            };
-            save_commit(&root_commit, &commits_dir)?;
-            set_current_commit_id(0, vcdir)?;
-            println!("Initialized empty repository");
+            if vcdir.exists() {
+                println!("Repository already initialized.");
+            } else {
+                std::fs::create_dir_all(&commits_dir)?;
+                let root_commit = Commit {
+                    id: 0,
+                    parent_id: None,
+                    instructions: vec![],
+                    timestamp: 0, // TODO: use real timestamp
+                };
+                save_commit(&root_commit, &commits_dir)?;
+                set_current_commit_id(0, vcdir)?;
+
+                let code_file = Path::new("code.lisp");
+                if !code_file.exists() {
+                    std::fs::write(code_file, "")?;
+                    println!("Initialized empty repository and created empty 'code.lisp'.");
+                } else {
+                    println!("Initialized empty repository. 'code.lisp' already exists.");
+                }
+            }
         }
         Commands::Commit => {
             let code = std::fs::read_to_string("code.lisp")?;
